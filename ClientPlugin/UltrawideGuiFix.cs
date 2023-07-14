@@ -28,8 +28,7 @@ namespace ClientPlugin
 
         private bool IsKeybindPressed()
         {
-            return MyInput.Static.IsNewGameControlPressed(MyControlsSpace.BUILD_SCREEN) &&
-                   MyInput.Static.IsAnyAltKeyPressed() && MyInput.Static.IsAnyCtrlKeyPressed();
+            return MyInput.Static.IsNewGameControlPressed(MyControlsSpace.BUILD_SCREEN) && MyInput.Static.IsAnyCtrlKeyPressed();
         }
     }
 }
