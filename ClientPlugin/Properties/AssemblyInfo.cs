@@ -4,11 +4,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("PluginTemplate")]
+[assembly: AssemblyTitle("UltrawideGuiFix")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("PluginTemplate")]
+[assembly: AssemblyProduct("UltrawideGuiFix")]
 [assembly: AssemblyCopyright("Copyright ©  2022")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -19,7 +19,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("A061FC6C-713E-42CD-B413-151AC8A5074C")]
+[assembly: Guid("4F3EC67F-AB79-43D3-89EB-A19DEE5CEC87")]
 
 // Version information for an assembly consists of the following four values:
 //

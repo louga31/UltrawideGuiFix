@@ -1,14 +1,14 @@
 <?xml version="1.0"?>
 <PluginData xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:type="GitHubPlugin">
-  <Id>TODO: github-user/project-name</Id>
-  <GroupId>TODO: github-user/project-name</GroupId>
-  <FriendlyName>TODO: PluginTemplate</FriendlyName>
-  <Author>TODO: Author Name</Author>
+  <Id>louga31/UltrawideGuiFix</Id>
+  <GroupId>louga31/UltrawideGuiFix</GroupId>
+  <FriendlyName>UltrawideGuiFix</FriendlyName>
+  <Author>louga31</Author>
   <Commit>TODO: Git commit hash</Commit>
   <SourceDirectories>
     <Directory>ClientPlugin</Directory>
   </SourceDirectories>
-  <Tooltip>TODO: Short description</Tooltip>
+  <Tooltip>Fix shop GUI in ultrawide resolutions</Tooltip>
   <Description>TODO: Long description, multiple lines.
 
 FriendlyName: How your plugin will show up in the Plugins list.
