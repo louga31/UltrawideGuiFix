@@ -522,6 +522,7 @@
   <ItemGroup>
     <Compile Include="Plugin.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UltrawideGuiFix.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="deploy.bat" />
