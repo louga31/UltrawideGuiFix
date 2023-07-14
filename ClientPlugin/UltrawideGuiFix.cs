@@ -1,8 +1,10 @@
-﻿using NLog.Fluent;
+﻿using avaness.PluginLoader.GUI;
+using NLog.Fluent;
 using Sandbox;
 using Sandbox.Game;
 using Sandbox.Game.Gui;
 using Sandbox.Game.World;
+using Sandbox.Graphics.GUI;
 using VRage.Game.Components;
 using VRage.Input;
 
@@ -23,7 +25,7 @@ namespace ClientPlugin
                 !MyGuiScreenGamePlay.DisableInput && IsKeybindPressed())
             {
                 Log.Debug("Key Pressed");
-                // Open Gui ???
+                ATM.Open();
             }
         }
         
