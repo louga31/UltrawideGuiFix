@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Reflection;
+using EmptyKeys.UserInterface.Generated;
 using HarmonyLib;
 using Sandbox.Graphics.GUI;
 using VRage.Plugins;
@@ -41,5 +42,16 @@ namespace ClientPlugin
         {
             MyGuiSandbox.AddScreen(new MyPluginConfigDialog());
         }*/
+    }
+    
+    [HarmonyPatch(typeof(AtmBlockView))]
+    internal static class PatchAtm
+    {
+        [HarmonyPatch("Initialize")]
+        [HarmonyPrefix]
+        public static void Initialize()
+        {
+            ATM.Open();
+        }
     }
 }
