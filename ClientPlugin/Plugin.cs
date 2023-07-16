@@ -63,7 +63,7 @@ namespace ClientPlugin
             Log.Debug("Patching MyUseObjectAtmBlock.Use()");
             var codes = new List<CodeInstruction>(instructions);
             var startIndex = findInstructionIndex(codes, "call", "EmptyKeys.UserInterface.Mvvm.ServiceManager get_Instance()");
-            var endIndex = findInstructionIndex(codes, "call", "Void AddScreen(Sandbox.Graphics.GUI.MyGuiScreenBase)");
+            var endIndex = findInstructionIndex(codes, "call", AccessTools.Method(typeof(MyGuiSandbox), nameof(MyGuiSandbox.AddScreen)).ToString());
 
             if (startIndex > -1 && endIndex > -1)
             {
@@ -73,7 +73,8 @@ namespace ClientPlugin
                 IEnumerable<CodeInstruction> Inst()
                 {
                     yield return new CodeInstruction(OpCodes.Ldloc_1);
-                    yield return CodeInstruction.Call(typeof(ATM), "Open", new []{typeof(MyStoreBlock)});
+                    yield return new CodeInstruction(OpCodes.Newobj, AccessTools.Constructor(typeof(ATM), new Type[] { typeof(MyStoreBlock)}));
+                    yield return new CodeInstruction(OpCodes.Call, AccessTools.Method(typeof(MyGuiSandbox), nameof(MyGuiSandbox.AddScreen)));
                 }
                 codes.InsertRange(startIndex+1, Inst());
             }

@@ -2,6 +2,7 @@
 using System.Reflection;
 using System.Text;
 using avaness.PluginLoader.GUI;
+using HarmonyLib;
 using Sandbox.Engine.Multiplayer;
 using Sandbox.Game;
 using Sandbox.Game.Entities;
@@ -34,12 +35,6 @@ namespace ClientPlugin
             inventory = player.Character.GetInventory();
             MyBankingSystem.Static.TryGetAccountInfo(player.Identity.IdentityId, out accountInfo);
             this.storeBlock = storeBlock;
-        }
-
-        public static void Open(MyStoreBlock storeBlock)
-        {
-            ATM atm = new ATM(storeBlock);
-            MyGuiSandbox.AddScreen(atm);
         }
 
         public override string GetFriendlyName()
@@ -117,7 +112,7 @@ namespace ClientPlugin
 
         private void OnDepositClick(MyGuiControlButton btn)
         {
-            typeof(MyStoreBlock).GetMethod("CreateChangeBalanceRequest", BindingFlags.NonPublic | BindingFlags.Instance)
+            AccessTools.Method(typeof(MyStoreBlock), "CreateChangeBalanceRequest")
                 .Invoke(storeBlock,
                     new object[]
                     {
@@ -128,11 +123,11 @@ namespace ClientPlugin
 
         private void OnWithdrawClick(MyGuiControlButton btn)
         {
-            typeof(MyStoreBlock).GetMethod("CreateChangeBalanceRequest", BindingFlags.NonPublic | BindingFlags.Instance)
+            AccessTools.Method(typeof(MyStoreBlock), "CreateChangeBalanceRequest")
                 .Invoke(storeBlock,
                     new object[]
                     {
-                        -balanceChangeValue, inventory.Entity.EntityId,
+                        balanceChangeValue, inventory.Entity.EntityId,
                         new Action<MyStoreBuyItemResults>(OnChangeBalanceCompleted)
                     });
         }
