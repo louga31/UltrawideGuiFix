@@ -1,30 +1,47 @@
-﻿using System.Text;
+﻿using System;
+using System.Reflection;
+using System.Text;
 using avaness.PluginLoader.GUI;
+using Sandbox.Engine.Multiplayer;
 using Sandbox.Game;
 using Sandbox.Game.Entities;
+using Sandbox.Game.Entities.Blocks;
+using Sandbox.Game.GameSystems.BankingAndCurrency;
+using Sandbox.Game.Localization;
 using Sandbox.Game.World;
 using Sandbox.Graphics.GUI;
+using VRage;
 using VRage.Game;
+using VRage.Network;
 using VRageMath;
 
 namespace ClientPlugin
 {
     public class ATM : PluginScreen
     {
-        public ATM(MyInventory inventory)
+        private MyInventory inventory;
+        private MyPlayer player;
+        private MyAccountInfo accountInfo;
+        private int balanceChangeValue = 0;
+        private MyStoreBlock storeBlock;
+        
+        MyGuiControlLabel balanceValue;
+        MyGuiControlLabel inventoryValue;
+
+        public ATM(MyStoreBlock storeBlock)
         {
-            this.inventory = inventory;
+            player = MySession.Static.LocalHumanPlayer;
+            inventory = player.Character.GetInventory();
+            MyBankingSystem.Static.TryGetAccountInfo(player.Identity.IdentityId, out accountInfo);
+            this.storeBlock = storeBlock;
         }
 
-        private MyInventory inventory;
-        
-        public static void Open()
+        public static void Open(MyStoreBlock storeBlock)
         {
-            MyInventory inventory = MySession.Static.LocalCharacter.GetInventory();
-            ATM atm = new ATM(inventory);
+            ATM atm = new ATM(storeBlock);
             MyGuiSandbox.AddScreen(atm);
         }
-        
+
         public override string GetFriendlyName()
         {
             return typeof(ATM).FullName;
@@ -33,73 +50,128 @@ namespace ClientPlugin
         public override void RecreateControls(bool constructor)
         {
             base.RecreateControls(constructor);
-            
+
             // Top
             MyGuiControlLabel caption = AddCaption("ATM", captionScale: 1);
             AddBarBelow(caption);
-            
+
             // Bottom
             Vector2 bottomMid = new Vector2(0, m_size.Value.Y / 2);
-            MyGuiControlButton btnDeposit = new MyGuiControlButton(position: new Vector2(bottomMid.X - GuiSpacing, bottomMid.Y - GuiSpacing), text: new StringBuilder("Deposit"), originAlign: VRage.Utils.MyGuiDrawAlignEnum.HORISONTAL_RIGHT_AND_VERTICAL_BOTTOM, onButtonClick: OnDepositClick);
-            MyGuiControlButton btnWithdraw = new MyGuiControlButton(position: new Vector2(bottomMid.X + GuiSpacing, bottomMid.Y - GuiSpacing), text: new StringBuilder("Withdraw"), originAlign: VRage.Utils.MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_BOTTOM, onButtonClick: OnWithdrawClick);
+            MyGuiControlButton btnDeposit = new MyGuiControlButton(
+                position: new Vector2(bottomMid.X - GuiSpacing, bottomMid.Y - GuiSpacing),
+                text: new StringBuilder("Deposit"),
+                originAlign: VRage.Utils.MyGuiDrawAlignEnum.HORISONTAL_RIGHT_AND_VERTICAL_BOTTOM,
+                onButtonClick: OnDepositClick);
+            MyGuiControlButton btnWithdraw = new MyGuiControlButton(
+                position: new Vector2(bottomMid.X + GuiSpacing, bottomMid.Y - GuiSpacing),
+                text: new StringBuilder("Withdraw"),
+                originAlign: VRage.Utils.MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_BOTTOM,
+                onButtonClick: OnWithdrawClick);
             Controls.Add(btnDeposit);
             Controls.Add(btnWithdraw);
             AddBarAbove(btnDeposit);
-            
+
             // Center
             MyLayoutTable layout = GetLayoutTableBetween(caption, btnDeposit, verticalSpacing: GuiSpacing * 2);
-            layout.SetColumnWidthsNormalized(0.5f, 0.35f, 0.05f, 0.05f, 0.05f);
-            layout.SetRowHeightsNormalized(0.05f, 0.05f, 0.05f, 0.85f);
-            
-            // Row 0
-            
-            
-            // Row 1
-            MyGuiControlLabel volumeLabel = new MyGuiControlLabel(text: "Volume:");
-            layout.Add(volumeLabel, MyAlignH.Left, MyAlignV.Center, 1, 0);
-            MyGuiControlLabel volumeValue = new MyGuiControlLabel(text: (inventory.CurrentVolume * 1000.00f) + " L / " + (inventory.MaxVolume > 1000000 ? "Unlimited" : inventory.MaxVolume.ToString()));
-            layout.AddWithSize(volumeValue, MyAlignH.Right, MyAlignV.Center, 1, 1, colSpan: 4);
-            
-            // Row 2
-            MyGuiControlLabel balanceLabel = new MyGuiControlLabel(text: "Account Balance:");
-            layout.Add(balanceLabel, MyAlignH.Left, MyAlignV.Center, 2, 0);
-            MyGuiControlLabel balanceValue = new MyGuiControlLabel(text: 0.0.ToString());
-            layout.AddWithSize(balanceValue, MyAlignH.Right, MyAlignV.Center, 2, 1, colSpan: 3);
-            //Add currency icon
-            MyGuiControlImage currencyIcon = new MyGuiControlImage(size: new Vector2(0.02f), textures: new string[1]
-            {
-                @"Textures\GUI\Icons\SpaceCredits.dds"
-            });
-            layout.Add(currencyIcon, MyAlignH.Right, MyAlignV.Center, 2, 4);
-            
-            // Row 3
-            MyGuiControlLabel cashbackLabel = new MyGuiControlLabel(text: "Cashback:");
-            layout.Add(cashbackLabel, MyAlignH.Left, MyAlignV.Center, 3, 0);
-            MyGuiControlTextbox cashbackValue = new MyGuiControlTextbox(type: MyGuiControlTextboxType.DigitsOnly ,defaultText: 0.0.ToString());
-            layout.Add(cashbackValue, MyAlignH.Right, MyAlignV.Center, 3, 1);
-            MyGuiControlButton btnMinus = new MyGuiControlButton(visualStyle: MyGuiControlButtonStyleEnum.SquareSmall);
-            AddImageToButton(btnMinus, @"Textures\GUI\Icons\HUD 2017\Minus.dds", 0.8f);
-            layout.Add(btnMinus, MyAlignH.Right, MyAlignV.Center, 3, 2);
-            MyGuiControlButton btnPlus = new MyGuiControlButton(visualStyle: MyGuiControlButtonStyleEnum.SquareSmall);
-            AddImageToButton(btnPlus, @"Textures\GUI\Icons\HUD 2017\Plus.dds", 0.8f);
-            layout.Add(btnPlus, MyAlignH.Right, MyAlignV.Center, 3, 3);
-            //Add currency icon
-            MyGuiControlImage currencyIcon2 = new MyGuiControlImage(size: new Vector2(0.02f), textures: new string[1]
-            {
-                @"Textures\GUI\Icons\SpaceCredits.dds"
-            });
-            layout.Add(currencyIcon2, MyAlignH.Right, MyAlignV.Center, 3, 4);
+            layout.SetColumnWidthsNormalized(0.5f, 0.35f, 0.05f);
+            layout.SetRowHeightsNormalized(0.05f, 0.05f, 0.85f);
 
+            // Row 0
+            MyGuiControlLabel inventoryLabel = new MyGuiControlLabel(text: "Inventory Balance:");
+            layout.Add(inventoryLabel, MyAlignH.Left, MyAlignV.Center, 0, 0);
+            inventoryValue = new MyGuiControlLabel(
+                text: MyBankingSystem.GetFormatedValue(inventory.GetItemAmount(MyBankingSystem.BankingSystemDefinition.PhysicalItemId).ToIntSafe()));
+            layout.Add(inventoryValue, MyAlignH.Right, MyAlignV.Center, 0, 1);
+            //Add currency icon
+            MyGuiControlImage row0currencyIcon = new MyGuiControlImage(size: new Vector2(0.02f),
+                textures: new string[] { MyBankingSystem.BankingSystemDefinition.Icons[0] });
+            layout.Add(row0currencyIcon, MyAlignH.Right, MyAlignV.Center, 0, 2);
+
+
+            // Row 1
+            MyGuiControlLabel balanceLabel = new MyGuiControlLabel(text: "Account Balance:");
+            layout.Add(balanceLabel, MyAlignH.Left, MyAlignV.Center, 1, 0);
+            balanceValue = new MyGuiControlLabel(text: MyBankingSystem.GetFormatedValue(accountInfo.Balance));
+            layout.Add(balanceValue, MyAlignH.Right, MyAlignV.Center, 1, 1);
+            //Add currency icon
+            MyGuiControlImage row1currencyIcon = new MyGuiControlImage(size: new Vector2(0.02f),
+                textures: new string[] { MyBankingSystem.BankingSystemDefinition.Icons[0] });
+            layout.Add(row1currencyIcon, MyAlignH.Right, MyAlignV.Center, 1, 2);
+
+            // Row 2
+            MyGuiControlLabel cashbackLabel = new MyGuiControlLabel(text: "Cashback:");
+            layout.Add(cashbackLabel, MyAlignH.Left, MyAlignV.Center, 2, 0);
+            MyGuiControlTextbox cashbackValue = new MyGuiControlTextbox(type: MyGuiControlTextboxType.DigitsOnly,
+                defaultText: balanceChangeValue.ToString());
+            cashbackValue.TextChanged += sender =>
+            {
+                if (int.TryParse(sender.Text, out int value))
+                {
+                    balanceChangeValue = value;
+                }
+            };
+            layout.Add(cashbackValue, MyAlignH.Right, MyAlignV.Center, 2, 1);
+            //Add currency icon
+            MyGuiControlImage row2currencyIcon = new MyGuiControlImage(size: new Vector2(0.02f),
+                textures: new string[] { MyBankingSystem.BankingSystemDefinition.Icons[0] });
+            layout.Add(row2currencyIcon, MyAlignH.Right, MyAlignV.Center, 2, 2);
         }
-        
+
         private void OnDepositClick(MyGuiControlButton btn)
         {
-            CloseScreen();
+            typeof(MyStoreBlock).GetMethod("CreateChangeBalanceRequest", BindingFlags.NonPublic | BindingFlags.Instance)
+                .Invoke(storeBlock,
+                    new object[]
+                    {
+                        balanceChangeValue, inventory.Entity.EntityId,
+                        new Action<MyStoreBuyItemResults>(OnChangeBalanceCompleted)
+                    });
         }
 
         private void OnWithdrawClick(MyGuiControlButton btn)
         {
-            CloseScreen();
+            typeof(MyStoreBlock).GetMethod("CreateChangeBalanceRequest", BindingFlags.NonPublic | BindingFlags.Instance)
+                .Invoke(storeBlock,
+                    new object[]
+                    {
+                        -balanceChangeValue, inventory.Entity.EntityId,
+                        new Action<MyStoreBuyItemResults>(OnChangeBalanceCompleted)
+                    });
+        }
+
+        private void OnChangeBalanceCompleted(MyStoreBuyItemResults result)
+        {
+            ProcessResult(result);
+        }
+
+        private void ProcessResult(MyStoreBuyItemResults result)
+        {
+            switch (result)
+            {
+                case MyStoreBuyItemResults.WrongAmount:
+                    MyGuiSandbox.AddScreen(MyGuiSandbox.CreateMessageBox(buttonType: MyMessageBoxButtonsType.OK,
+                        messageCaption: MyTexts.Get(MySpaceTexts.StoreBuy_Error_Caption_WrongAmount),
+                        messageText: MyTexts.Get(MySpaceTexts.StoreBuy_Error_Text_WrongAmount)));
+                    break;
+                case MyStoreBuyItemResults.NotEnoughMoney:
+                    MyGuiSandbox.AddScreen(MyGuiSandbox.CreateMessageBox(buttonType: MyMessageBoxButtonsType.OK,
+                        messageCaption: MyTexts.Get(MySpaceTexts.StoreBuy_Error_Caption_NotEnoughMoney),
+                        messageText: MyTexts.Get(MySpaceTexts.StoreBuy_Error_Text_NotEnoughMoney)));
+                    break;
+                case MyStoreBuyItemResults.NotEnoughInventorySpace:
+                    MyGuiSandbox.AddScreen(MyGuiSandbox.CreateMessageBox(buttonType: MyMessageBoxButtonsType.OK,
+                        messageCaption: MyTexts.Get(MySpaceTexts.StoreBuy_Error_Caption_NotEnoughMoney),
+                        messageText: MyTexts.Get(MySpaceTexts.StoreBuy_Error_Text_NotEnoughInventorySpace)));
+                    break;
+            }
+            UpdateLocalPlayerCurrency();
+        }
+
+        private void UpdateLocalPlayerCurrency()
+        {
+            MyBankingSystem.Static.TryGetAccountInfo(MySession.Static.LocalPlayerId, out accountInfo);
+            balanceValue.Text = MyBankingSystem.GetFormatedValue(accountInfo.Balance);
+            inventoryValue.Text = MyBankingSystem.GetFormatedValue(inventory.GetItemAmount(MyBankingSystem.BankingSystemDefinition.PhysicalItemId).ToIntSafe());
         }
     }
 }

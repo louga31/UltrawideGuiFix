@@ -2,7 +2,10 @@
 using System.Reflection;
 using EmptyKeys.UserInterface.Generated;
 using HarmonyLib;
+using Sandbox.Game.Entities.Blocks;
+using Sandbox.Game.Screens.ViewModels;
 using Sandbox.Graphics.GUI;
+using SpaceEngineers.Game.Entities.UseObjects;
 using VRage.Plugins;
 
 namespace ClientPlugin
@@ -44,14 +47,14 @@ namespace ClientPlugin
         }*/
     }
     
-    [HarmonyPatch(typeof(AtmBlockView))]
+    [HarmonyPatch(typeof(MyUseObjectAtmBlock))]
     internal static class PatchAtm
     {
-        [HarmonyPatch("Initialize")]
-        [HarmonyPrefix]
-        public static void Initialize()
+        [HarmonyPatch(nameof(MyUseObjectAtmBlock.Use))]
+        [HarmonyPostfix]
+        public static void Patch(MyUseObjectAtmBlock __instance)
         {
-            ATM.Open();
+            ATM.Open(__instance.Owner as MyStoreBlock);
         }
     }
 }
