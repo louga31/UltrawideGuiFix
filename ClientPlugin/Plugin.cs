@@ -6,6 +6,8 @@ using Sandbox.Game.Entities.Blocks;
 using Sandbox.Game.Screens.ViewModels;
 using Sandbox.Graphics.GUI;
 using SpaceEngineers.Game.Entities.UseObjects;
+using VRage.Game.Entity.UseObject;
+using VRage.Game.ModAPI.Ingame;
 using VRage.Plugins;
 
 namespace ClientPlugin
@@ -52,9 +54,12 @@ namespace ClientPlugin
     {
         [HarmonyPatch(nameof(MyUseObjectAtmBlock.Use))]
         [HarmonyPostfix]
-        public static void Patch(MyUseObjectAtmBlock __instance)
+        public static void Patch(MyUseObjectAtmBlock __instance, UseActionEnum actionEnum, IMyEntity userEntity)
         {
-            ATM.Open(__instance.Owner as MyStoreBlock);
+            if (actionEnum == UseActionEnum.Manipulate)
+            {
+                ATM.Open(__instance.Owner as MyStoreBlock);
+            }
         }
     }
 }
