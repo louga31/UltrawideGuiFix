@@ -28,7 +28,7 @@ namespace ClientPlugin
         MyGuiControlLabel balanceValue;
         MyGuiControlLabel inventoryValue;
 
-        public ATM(MyStoreBlock storeBlock)
+        public ATM(MyStoreBlock storeBlock) : base(size: new Vector2(0.45f, 0.3f))
         {
             player = MySession.Static.LocalHumanPlayer;
             inventory = player.Character.GetInventory();
@@ -52,19 +52,19 @@ namespace ClientPlugin
             base.RecreateControls(constructor);
 
             // Top
-            MyGuiControlLabel caption = AddCaption("ATM", captionScale: 1);
+            MyGuiControlLabel caption = AddCaption(MySpaceTexts.ScreenCaptionATM, captionScale: 1);
             AddBarBelow(caption);
 
             // Bottom
             Vector2 bottomMid = new Vector2(0, m_size.Value.Y / 2);
             MyGuiControlButton btnDeposit = new MyGuiControlButton(
                 position: new Vector2(bottomMid.X - GuiSpacing, bottomMid.Y - GuiSpacing),
-                text: new StringBuilder("Deposit"),
+                text: MyTexts.Get(MySpaceTexts.FactionTerminal_Deposit_Currency),
                 originAlign: VRage.Utils.MyGuiDrawAlignEnum.HORISONTAL_RIGHT_AND_VERTICAL_BOTTOM,
                 onButtonClick: OnDepositClick);
             MyGuiControlButton btnWithdraw = new MyGuiControlButton(
                 position: new Vector2(bottomMid.X + GuiSpacing, bottomMid.Y - GuiSpacing),
-                text: new StringBuilder("Withdraw"),
+                text: MyTexts.Get(MySpaceTexts.FactionTerminal_Withdraw_Currency),
                 originAlign: VRage.Utils.MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_BOTTOM,
                 onButtonClick: OnWithdrawClick);
             Controls.Add(btnDeposit);
@@ -73,8 +73,8 @@ namespace ClientPlugin
 
             // Center
             MyLayoutTable layout = GetLayoutTableBetween(caption, btnDeposit, verticalSpacing: GuiSpacing * 2);
-            layout.SetColumnWidthsNormalized(0.5f, 0.35f, 0.05f);
-            layout.SetRowHeightsNormalized(0.05f, 0.05f, 0.85f);
+            layout.SetColumnWidthsNormalized(0.2f, 0.15f, 0.02f);
+            layout.SetRowHeightsNormalized(0.10f, 0.10f, 0.10f);
 
             // Row 0
             MyGuiControlLabel inventoryLabel = new MyGuiControlLabel(text: "Inventory Balance:");
@@ -89,7 +89,7 @@ namespace ClientPlugin
 
 
             // Row 1
-            MyGuiControlLabel balanceLabel = new MyGuiControlLabel(text: "Account Balance:");
+            MyGuiControlLabel balanceLabel = new MyGuiControlLabel(text: MyTexts.Get(MySpaceTexts.Currency_Default_Account_Label).ToString());
             layout.Add(balanceLabel, MyAlignH.Left, MyAlignV.Center, 1, 0);
             balanceValue = new MyGuiControlLabel(text: MyBankingSystem.GetFormatedValue(accountInfo.Balance));
             layout.Add(balanceValue, MyAlignH.Right, MyAlignV.Center, 1, 1);
@@ -99,8 +99,6 @@ namespace ClientPlugin
             layout.Add(row1currencyIcon, MyAlignH.Right, MyAlignV.Center, 1, 2);
 
             // Row 2
-            MyGuiControlLabel cashbackLabel = new MyGuiControlLabel(text: "Cashback:");
-            layout.Add(cashbackLabel, MyAlignH.Left, MyAlignV.Center, 2, 0);
             MyGuiControlTextbox cashbackValue = new MyGuiControlTextbox(type: MyGuiControlTextboxType.DigitsOnly,
                 defaultText: balanceChangeValue.ToString());
             cashbackValue.TextChanged += sender =>
@@ -110,7 +108,7 @@ namespace ClientPlugin
                     balanceChangeValue = value;
                 }
             };
-            layout.Add(cashbackValue, MyAlignH.Right, MyAlignV.Center, 2, 1);
+            layout.AddWithSize(cashbackValue, MyAlignH.Right, MyAlignV.Center, 2, 0, colSpan: 2);
             //Add currency icon
             MyGuiControlImage row2currencyIcon = new MyGuiControlImage(size: new Vector2(0.02f),
                 textures: new string[] { MyBankingSystem.BankingSystemDefinition.Icons[0] });
