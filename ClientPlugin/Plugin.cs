@@ -1,7 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
+using System.Reflection.Emit;
 using EmptyKeys.UserInterface.Generated;
 using HarmonyLib;
+using NLog.Fluent;
 using Sandbox.Game.Entities.Blocks;
 using Sandbox.Game.Screens.ViewModels;
 using Sandbox.Graphics.GUI;
@@ -50,16 +54,46 @@ namespace ClientPlugin
     }
     
     [HarmonyPatch(typeof(MyUseObjectAtmBlock))]
-    internal static class PatchAtm
+    public static class MyUseObjectAtmBlock_Patch
     {
         [HarmonyPatch(nameof(MyUseObjectAtmBlock.Use))]
-        [HarmonyPostfix]
-        public static void Patch(MyUseObjectAtmBlock __instance, UseActionEnum actionEnum, IMyEntity userEntity)
+        [HarmonyTranspiler]
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {
-            if (actionEnum == UseActionEnum.Manipulate)
+            Log.Debug("Patching MyUseObjectAtmBlock.Use()");
+            var codes = new List<CodeInstruction>(instructions);
+            var startIndex = findInstructionIndex(codes, "call", "EmptyKeys.UserInterface.Mvvm.ServiceManager get_Instance()");
+            var endIndex = findInstructionIndex(codes, "call", "Void AddScreen(Sandbox.Graphics.GUI.MyGuiScreenBase)");
+
+            if (startIndex > -1 && endIndex > -1)
             {
-                ATM.Open(__instance.Owner as MyStoreBlock);
+                codes[startIndex].opcode = OpCodes.Nop;
+                codes[startIndex].operand = null;
+                codes.RemoveRange(startIndex + 1, endIndex - startIndex);
+                IEnumerable<CodeInstruction> Inst()
+                {
+                    yield return new CodeInstruction(OpCodes.Ldloc_1);
+                    yield return CodeInstruction.Call(typeof(ATM), "Open", new []{typeof(MyStoreBlock)});
+                }
+                codes.InsertRange(startIndex+1, Inst());
             }
+
+            return codes.AsEnumerable();
+        }
+        
+        static int findInstructionIndex(IEnumerable<CodeInstruction> instructions, string opcode, string operand)
+        {
+            var codes = new List<CodeInstruction>(instructions);
+            for (var i = 0; i < codes.Count; i++)
+            {
+                var strOpcode = codes[i].opcode.ToString();
+                var strOperand = codes[i].operand != null ? codes[i].operand.ToString() : null;
+                if (strOpcode == opcode && strOperand == operand)
+                {
+                    return i;
+                }
+            }
+            return -1;
         }
     }
 }

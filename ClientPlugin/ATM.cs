@@ -77,7 +77,7 @@ namespace ClientPlugin
             layout.SetRowHeightsNormalized(0.10f, 0.10f, 0.10f);
 
             // Row 0
-            MyGuiControlLabel inventoryLabel = new MyGuiControlLabel(text: "Inventory Balance:");
+            MyGuiControlLabel inventoryLabel = new MyGuiControlLabel(text: "Cash:");
             layout.Add(inventoryLabel, MyAlignH.Left, MyAlignV.Center, 0, 0);
             inventoryValue = new MyGuiControlLabel(
                 text: MyBankingSystem.GetFormatedValue(inventory.GetItemAmount(MyBankingSystem.BankingSystemDefinition.PhysicalItemId).ToIntSafe()));
